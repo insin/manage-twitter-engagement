@@ -1,10 +1,10 @@
 # Manage Twitter Engagement
 
-**Manage extra "engagement" on Twitter by hiding Retweets and algorithmic timeline tweets (Retweetlikes)**
+**Manage extra "engagement" on Twitter by hiding Retweets and algorithmic timeline tweets (Retweetlikes‽)**
 
-Adds controls to toggle display of Retweets and algorithmic timeline tweets (Retweetlikes) to your Twitter profile box - Retweetlikes are hidden by default.
+Adds controls to toggle display of Retweets and Retweetlikes to your Twitter profile box - Retweetlikes are hidden by default.
 
-Retweets and Retweetlikes are highlighted to make them stand out from other tweets when visible.
+Retweets and Retweetlikes are also highlighted to make them stand out from other tweets when visible.
 
 * [Install Chrome Extension](https://chrome.google.com/webstore/detail/manage-twitter-engagement/epgepgoafebogggijjemimfjbkidblia)
 * [Install Firefox Add-on](https://addons.mozilla.org/en-US/firefox/addon/manage-twitter-engagement/)
