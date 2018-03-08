@@ -1,5 +1,7 @@
 # Manage Twitter Engagement
 
+![](icons/icon128.png)
+
 **Manage extra "engagement" on Twitter by hiding Retweets and algorithmic timeline tweets (Retweetlikes‽)**
 
 Adds controls to your Twitter profile box to toggle display of Retweets and Retweetlikes — Retweetlikes are hidden by default.
