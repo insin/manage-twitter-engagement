@@ -2,7 +2,7 @@
 
 **Manage extra "engagement" on Twitter by hiding Retweets and algorithmic timeline tweets (Retweetlikes‽)**
 
-Adds controls to toggle display of Retweets and Retweetlikes to your Twitter profile box - Retweetlikes are hidden by default.
+Adds controls to your Twitter profile box to toggle display of Retweets and Retweetlikes — Retweetlikes are hidden by default.
 
 Retweets and Retweetlikes are also highlighted to make them stand out from other tweets when visible.
 
