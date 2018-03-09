@@ -3,18 +3,25 @@
 // @description Manage extra "engagement" on Twitter by hiding Retweets and algorithmic timeline tweets (Retweetlikes)
 // @namespace   https://github.com/insin/manage-twitter-engagement/
 // @match       https://twitter.com/
-// @version     1
+// @version     2
 // ==/UserScript==
 
 const CIRCLE = 'display: inline-block; width: 20px; height: 20px; vertical-align: text-bottom; border-radius: 50%'
 
 // Identify retweets by by their retweet id in element data
 const RETWEET_SELECTOR = 'div[data-retweet-id]'
-const RETWEET_BG = 'background-color: rgb(245,252,248)'
-
 // Identify retweetlikes by the heart icon in their context header
 const RETWEETLIKE_SELECTOR = '.tweet-context .Icon--heartBadge'
-const RETWEETLIKE_BG = 'background-color: rgb(253,246,248)'
+
+let retweetBG
+let retweetlikeBG
+
+function setThemeColours(isNightMode) {
+  retweetBG = `background-color: ${isNightMode ? '#1b3036' : '#f5fcf8'}`
+  retweetlikeBG = `background-color: ${isNightMode ? '#2f2836' : '#fdf6f8'}`
+}
+
+setThemeColours(/nightmode/.test(document.querySelector('link[class="coreCSSBundles"]').href))
 
 // Default to hiding Retweetlikes because GTFO, Twitter
 let hideRetweets = localStorage.mte_hideRetweets === 'true'
@@ -33,7 +40,7 @@ $controls.innerHTML = `
       <input type="checkbox" class="mte_hideRetweets">
       Hide <span class="mte_retweetCount">0</span>
       Retweet<span class="mte_retweetPlural">s</span>
-      <span style="${RETWEET_BG}; ${CIRCLE}"></span>
+      <span class="mte_retweetColour" style="${retweetBG}; ${CIRCLE}"></span>
     </label>
   </div>
   <div>
@@ -41,7 +48,7 @@ $controls.innerHTML = `
       <input type="checkbox" class="mte_hideRetweetLikes">
       Hide <span class="mte_retweetLikeCount">0</span>
       Retweetlike<span class="mte_retweetLikePlural">s</span>
-      <span style="${RETWEETLIKE_BG}; ${CIRCLE}"></span>
+      <span class="mte_retweetlikeColour" style="${retweetlikeBG}; ${CIRCLE}"></span>
     </label>
   </div>
 `
@@ -85,14 +92,14 @@ function processTweets(tweets) {
   for (let tweet of tweets) {
     if (tweet.querySelector(RETWEETLIKE_SELECTOR)) {
       retweetLikeCount++
-      tweet.style = RETWEETLIKE_BG
+      tweet.style = retweetlikeBG
       if (hideRetweetLikes) {
         tweet.style.display = 'none'
       }
     }
     else if (tweet.querySelector(RETWEET_SELECTOR)) {
       retweetCount++
-      tweet.style = RETWEET_BG
+      tweet.style = retweetBG
       if (hideRetweets) {
         tweet.style.display = 'none'
       }
@@ -109,6 +116,31 @@ let streamItems = document.getElementById('stream-items-id')
 new MutationObserver(mutations =>
   mutations.forEach(mutation => processTweets(mutation.addedNodes))
 ).observe(streamItems, {childList: true})
+
+// Watch <head> for the core CSS bundle changing when nightmode is toggled
+new MutationObserver(mutations =>
+  mutations.forEach(mutation => {
+    if (mutation.addedNodes.length === 0 ||
+        mutation.addedNodes[0].getAttribute('class') !== 'coreCSSBundles') {
+      return
+    }
+
+    // Update retweet and retweetlike highlight colours
+    setTimeout(() => {
+      setThemeColours(/nightmode/.test(mutation.addedNodes[0].href))
+      document.querySelector('.mte_retweetColour').style = `${retweetBG}; ${CIRCLE}`
+      document.querySelector('.mte_retweetlikeColour').style = `${retweetlikeBG}; ${CIRCLE}`
+      for (tweet of getAllTweets()) {
+        if (tweet.querySelector(RETWEETLIKE_SELECTOR)) {
+          tweet.style = retweetlikeBG
+        }
+        else if (tweet.querySelector(RETWEET_SELECTOR)) {
+          tweet.style = retweetBG
+        }
+      }
+    }, 500)
+  })
+).observe(document.querySelector('head'), {childList: true, attributes: true})
 
 // Show controls
 let $profileCard = document.querySelector('div.ProfileCardStats')
