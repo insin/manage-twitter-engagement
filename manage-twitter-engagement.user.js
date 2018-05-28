@@ -199,7 +199,7 @@ new MutationObserver(() => {
   let page = /(\w+)Page/.exec(document.body.className)
 
   // The homepage has no <Name>Page class
-  if (!page) {
+  if (!page && window.location.pathname === '/') {
     if (streamObserver == null) {
       startManagingEngagement()
     }
