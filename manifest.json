@@ -3,7 +3,7 @@
   "name": "Manage Twitter Engagement",
   "description": "Manage extra \"engagement\" on Twitter by hiding Retweets and algorithmic timeline tweets (Retweetlikes)",
   "homepage_url": "https://github.com/insin/manage-twitter-engagement/",
-  "version": "1.2",
+  "version": "1.3",
   "icons": {
     "16": "icons/icon16.png",
     "48": "icons/icon48.png",

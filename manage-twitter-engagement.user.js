@@ -3,7 +3,7 @@
 // @description Manage extra "engagement" on Twitter by hiding Retweets and algorithmic timeline tweets (Retweetlikes)
 // @namespace   https://github.com/insin/manage-twitter-engagement/
 // @match       https://twitter.com/*
-// @version     3
+// @version     4
 // ==/UserScript==
 
 const CIRCLE = 'display: inline-block; width: 20px; height: 20px; vertical-align: text-bottom; border-radius: 50%'
