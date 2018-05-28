@@ -24,6 +24,7 @@ let streamObserver = null
 let styleModeObserver = null
 let retweetBG
 let retweetlikeBG
+let $controls
 let $retweetCount
 let $retweetPlural
 let $retweetLikeCount
@@ -32,7 +33,7 @@ let $retweetLikePlural
 let getAllTweets = () => document.querySelectorAll('#stream-items-id > .stream-item')
 
 function injectUI() {
-  let $controls = document.createElement('div')
+  $controls = document.createElement('div')
   $controls.style = 'padding: 0 16px 16px 16px'
   $controls.innerHTML = `
     <div style="margin-bottom: 3px">
@@ -176,6 +177,7 @@ function startManagingEngagement() {
 }
 
 function stopManagingEngagement() {
+  $controls.remove()
   streamObserver.disconnect()
   streamObserver = null
   styleModeObserver.disconnect()
