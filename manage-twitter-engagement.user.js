@@ -1,175 +1,116 @@
 // ==UserScript==
 // @name        Manage Twitter Engagement
-// @description Manage extra "engagement" on Twitter by hiding Retweets and algorithmic timeline tweets (Retweetlikes)
+// @description Manage "engagement" on Twitter by moving retweets and algorithmic tweets to their own lists
 // @namespace   https://github.com/insin/manage-twitter-engagement/
 // @match       https://twitter.com/*
-// @version     4
+// @version     5
 // ==/UserScript==
-
-const CIRCLE = 'display: inline-block; width: 20px; height: 20px; vertical-align: text-bottom; border-radius: 50%'
 
 // Identify retweets by by their retweet id in element data
 const RETWEET_SELECTOR = 'div[data-retweet-id]'
+
 // Identify retweetlikes by the heart icon in their context header
 const RETWEETLIKE_SELECTOR = '.tweet-context .Icon--heartBadge'
 
-// Default to hiding Retweetlikes because GTFO, Twitter
-let hideRetweets = localStorage.mte_hideRetweets === 'true'
-let hideRetweetLikes = localStorage.mte_hideRetweetLikes === undefined || localStorage.mte_hideRetweetLikes === 'true'
-
-// UI variables
-let retweetCount = 0
-let retweetLikeCount = 0
-let streamObserver = null
-let styleModeObserver = null
-let retweetBG
-let retweetlikeBG
-let $controls
-let $retweetCount
-let $retweetPlural
-let $retweetLikeCount
-let $retweetLikePlural
+// State
+let displayedTweetType
+let streamObserver
+let $tabs
 
 let getAllTweets = () => document.querySelectorAll('#stream-items-id > .stream-item')
 
-function injectUI() {
-  $controls = document.createElement('div')
-  $controls.style = 'padding: 0 16px 16px 16px'
-  $controls.innerHTML = `
-    <div style="margin-bottom: 3px">
-      <label>
-        <input type="checkbox" class="mte_hideRetweets">
-        Hide <span class="mte_retweetCount">${retweetCount}</span>
-        Retweet<span class="mte_retweetPlural">${retweetCount === 1 ? '' : 's'}</span>
-        <span class="mte_retweetColour" style="${retweetBG}; ${CIRCLE}"></span>
-      </label>
-    </div>
-    <div>
-      <label>
-        <input type="checkbox" class="mte_hideRetweetLikes">
-        Hide <span class="mte_retweetLikeCount">${retweetLikeCount}</span>
-        Retweetlike<span class="mte_retweetLikePlural">${retweetLikeCount === 1 ? '' : 's'}</span>
-        <span class="mte_retweetlikeColour" style="${retweetlikeBG}; ${CIRCLE}"></span>
-      </label>
-    </div>
-  `
+function activateTab($tab) {
+  $tab.classList.add('is-active')
+  $tab.classList.remove('u-textUserColor')
+  $tab.querySelector('span').classList.remove('u-hiddenVisually')
+  $tab.querySelector('a').classList.add('u-hiddenVisually')
 
-  let $hideRetweets = $controls.querySelector('.mte_hideRetweets')
-  $retweetCount = $controls.querySelector('.mte_retweetCount')
-  $retweetPlural = $controls.querySelector('.mte_retweetPlural')
-  $hideRetweets.checked = hideRetweets
-  $hideRetweets.addEventListener('click', (e) => {
-    hideRetweets = e.target.checked
-    localStorage.mte_hideRetweets = hideRetweets
-    for (let tweet of getAllTweets()) {
-      if (tweet.querySelector(RETWEET_SELECTOR)) {
-        tweet.style.display = hideRetweets ? 'none' : ''
-      }
+  // Deactivate the previously-active tab
+  let $otherTab = $tab.parentNode.firstElementChild
+  do {
+    if ($otherTab !== $tab && $otherTab.classList.contains('is-active')) {
+      $otherTab.classList.remove('is-active')
+      $otherTab.classList.add('u-textUserColor')
+      $otherTab.querySelector('span').classList.add('u-hiddenVisually')
+      $otherTab.querySelector('a').classList.remove('u-hiddenVisually')
+      break
     }
-  })
+  } while ($otherTab = $otherTab.nextElementSibling)
+}
 
-  let $hideRetweetLikes = $controls.querySelector('.mte_hideRetweetLikes')
-  $retweetLikeCount = $controls.querySelector('.mte_retweetLikeCount')
-  $retweetLikePlural = $controls.querySelector('.mte_retweetLikePlural')
-  $hideRetweetLikes.checked = hideRetweetLikes
-  $hideRetweetLikes.addEventListener('click', (e) => {
-    hideRetweetLikes = e.target.checked
-    localStorage.mte_hideRetweetLikes = hideRetweetLikes
-    for (let tweet of getAllTweets()) {
-      if (tweet.querySelector(RETWEETLIKE_SELECTOR)) {
-        tweet.style.display = hideRetweetLikes ? 'none' : ''
-      }
+function toggleDisplayedTweets(tweets) {
+  for (let tweet of tweets) {
+    if (tweet.querySelector(RETWEETLIKE_SELECTOR)) {
+      tweet.style.display = displayedTweetType === 'suggested' ? '' : 'none'
     }
-  })
-
-  let $profileCard = document.querySelector('div.ProfileCardStats')
-  if ($profileCard) {
-    $profileCard.insertAdjacentElement('afterend', $controls)
+    else if (tweet.querySelector(RETWEET_SELECTOR)) {
+      tweet.style.display = displayedTweetType === 'retweets' ? '' : 'none'
+    }
+    else {
+      tweet.style.display = displayedTweetType === 'tweets' ? '' : 'none'
+    }
   }
 }
 
-function setThemeColours({nightMode}) {
-  retweetBG = `background-color: ${nightMode ? '#1b3036' : '#f5fcf8'}`
-  retweetlikeBG = `background-color: ${nightMode ? '#2f2836' : '#fdf6f8'}`
-}
+function injectUI() {
+  // It seems like Twitter caches some homepage content on navigation and restores it later?
+  // Without this, navigating from Home → Notifications → Home results in a non-functional dupe.
+  if (document.querySelector('#mte_tabs')) {
+    document.querySelector('#mte_tabs').remove()
+  }
 
-function updateCounts() {
-  $retweetCount.innerHTML = retweetCount
-  $retweetPlural.innerHTML = retweetCount === 1 ? '' : 's'
-  $retweetLikeCount.innerHTML = retweetLikeCount
-  $retweetLikePlural.innerHTML = retweetLikeCount === 1 ? '' : 's'
-}
+  $tabs = document.createElement('div')
+  $tabs.id = 'mte_tabs'
+  $tabs.innerHTML = `<div class="ProfileHeading">
+    <div class="ProfileHeading-content">
+      <ul class="ProfileHeading-toggle">
+        <li class="ProfileHeading-toggleItem is-active" data-type="tweets">
+          <span aria-hidden="true">Tweets</span>
+          <a class="ProfileHeading-toggleLink u-hiddenVisually" href="#" title="Tweets with original content">Tweets</a>
+          <span class="u-hiddenVisually">Tweets with original content</span>
+        </li>
+        <li class="ProfileHeading-toggleItem u-textUserColor" data-type="retweets">
+          <span aria-hidden="true" class="u-hiddenVisually">Retweets</span>
+          <a class="ProfileHeading-toggleLink" href="#" title="Tweets shared by people you follow">Retweets</a>
+          <span class="u-hiddenVisually">Tweets shared by people you follow</span>
+        </li>
+        <li class="ProfileHeading-toggleItem u-textUserColor" data-type="suggested">
+          <span aria-hidden="true" class="u-hiddenVisually">Suggested tweets</span>
+          <span class="u-hiddenVisually">Algorithmic tweets based on faves</span>
+          <a class="ProfileHeading-toggleLink" href="#" title="Algorithmic tweets based on faves">Suggested tweets</a>
+        </li>
+      </ul>
+    </div>
+  </div>`
 
-function processTweets(tweets) {
-  for (let tweet of tweets) {
-    if (tweet.querySelector(RETWEETLIKE_SELECTOR)) {
-      retweetLikeCount++
-      tweet.style = retweetlikeBG
-      if (hideRetweetLikes) {
-        tweet.style.display = 'none'
-      }
-    }
-    else if (tweet.querySelector(RETWEET_SELECTOR)) {
-      retweetCount++
-      tweet.style = retweetBG
-      if (hideRetweets) {
-        tweet.style.display = 'none'
-      }
-    }
+  for (let $tab of $tabs.querySelectorAll('li')) {
+    $tab.querySelector('a').addEventListener('click', (e) => {
+      e.preventDefault()
+      activateTab($tab)
+      displayedTweetType = $tab.dataset.type
+      toggleDisplayedTweets(getAllTweets())
+    })
+  }
+
+  let $streamContainer = document.querySelector('div.stream-container')
+  if ($streamContainer) {
+    $streamContainer.insertAdjacentElement('beforebegin', $tabs)
   }
 }
 
 function startManagingEngagement() {
-  // Reset runtime variables
-  retweetCount = 0
-  retweetLikeCount = 0
-  setThemeColours({
-    nightMode: /nightmode/.test(document.querySelector('link[class="coreCSSBundles"]').href)
-  })
+  // Always start on the tweets list
+  displayedTweetType = 'tweets'
 
   // Deal with the initial batch of tweets
-  processTweets(getAllTweets())
+  toggleDisplayedTweets(getAllTweets())
 
   // Watch the stream for the appearance of new tweets
   streamObserver = new MutationObserver(mutations =>
-    mutations.forEach(mutation => {
-      processTweets(mutation.addedNodes)
-      updateCounts()
-    })
+    mutations.forEach(mutation => toggleDisplayedTweets(mutation.addedNodes))
   )
   streamObserver.observe(document.getElementById('stream-items-id'), {
     childList: true
-  })
-
-  // Watch <head> for the core CSS bundle changing when nightmode is toggled
-  styleModeObserver = new MutationObserver(mutations =>
-    mutations.forEach(mutation => {
-      if (mutation.addedNodes.length === 0 ||
-          mutation.addedNodes[0].getAttribute('class') !== 'coreCSSBundles') {
-        return
-      }
-
-      // Update retweet and retweetlike highlight colours
-      setTimeout(() => {
-        setThemeColours({
-          nightMode: /nightmode/.test(mutation.addedNodes[0].href)
-        })
-        document.querySelector('.mte_retweetColour').style = `${retweetBG}; ${CIRCLE}`
-        document.querySelector('.mte_retweetlikeColour').style = `${retweetlikeBG}; ${CIRCLE}`
-        for (tweet of getAllTweets()) {
-          if (tweet.querySelector(RETWEETLIKE_SELECTOR)) {
-            tweet.style = retweetlikeBG
-          }
-          else if (tweet.querySelector(RETWEET_SELECTOR)) {
-            tweet.style = retweetBG
-          }
-        }
-      }, 500)
-    })
-  )
-  styleModeObserver.observe(document.querySelector('head'), {
-    attributes: true,
-    childList: true,
   })
 
   // Show controls
@@ -177,11 +118,10 @@ function startManagingEngagement() {
 }
 
 function stopManagingEngagement() {
-  $controls.remove()
+  $tabs.remove()
+  $tabs = null
   streamObserver.disconnect()
   streamObserver = null
-  styleModeObserver.disconnect()
-  styleModeObserver = null
 }
 
 /**
@@ -189,17 +129,14 @@ function stopManagingEngagement() {
  * next page and injects it.
  *
  * Check for page changes by observing <body>'s class attribute, which is
- * updated with loading state classes and after loading, for non-homepage pages,
- * a <Name>Page class.
+ * updated with loading state classes, then checking the URL to see if we're on
+ * the homepage.
  */
 new MutationObserver(() => {
   // Ignore loading states
   if (/(swift-loading|pushing-state)/.test(document.body.className)) return
 
-  let page = /(\w+)Page/.exec(document.body.className)
-
-  // The homepage has no <Name>Page class
-  if (!page && window.location.pathname === '/') {
+  if (window.location.pathname === '/') {
     if (streamObserver == null) {
       startManagingEngagement()
     }
