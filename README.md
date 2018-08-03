@@ -14,11 +14,27 @@ Manage Twitter Engagement moves them to their own lists on the homepage to reduc
 
 ## Screenshots
 
+Use the new section headings added by the extension to only show specific types of tweets:
+
 ![Screenshot of tweets in their own list on the Twitter homepage](screenshots/tweets.png)
 
 ![Screenshot of retweets in their own list on the Twitter homepage](screenshots/retweets.png)
 
 ![Screenshot of algorithmic tweets in their own list on the Twitter homepage](screenshots/suggested_tweets.png)
+
+Chrome extension options dialog:
+
+![Screenshot of the options UI in Chrome](screenshots/chrome_options.png)
+
+Firefox extension page options:
+
+![Screenshot of the options UI in Firefox](screenshots/firefox_options.png)
+
+## Options
+
+### Hide "Suggested tweets" section
+
+Enable this option to completely hide algorithmic tweets.
 
 ## Attribution
 

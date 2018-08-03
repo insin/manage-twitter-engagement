@@ -3,7 +3,7 @@
 // @description Manage "engagement" on Twitter by moving retweets and algorithmic tweets to their own lists
 // @namespace   https://github.com/insin/manage-twitter-engagement/
 // @match       https://twitter.com/*
-// @version     5
+// @version     6
 // ==/UserScript==
 
 // Identify retweets by by their retweet id in element data
@@ -13,6 +13,7 @@ const RETWEET_SELECTOR = 'div[data-retweet-id]'
 const RETWEETLIKE_SELECTOR = '.tweet-context .Icon--heartBadge'
 
 // State
+let config
 let displayedTweetType
 let streamObserver
 let $tabs
@@ -84,6 +85,10 @@ function injectUI() {
   </div>`
 
   for (let $tab of $tabs.querySelectorAll('li')) {
+    if ($tab.dataset.type === 'suggested' && config.hideSuggestedTweets) {
+      $tab.style.display = 'none'
+      continue
+    }
     $tab.querySelector('a').addEventListener('click', (e) => {
       e.preventDefault()
       activateTab($tab)
@@ -138,7 +143,13 @@ new MutationObserver(() => {
 
   if (window.location.pathname === '/') {
     if (streamObserver == null) {
-      startManagingEngagement()
+      streamObserver = {disconnect(){}}
+      chrome.storage.local.get((storedConfig) => {
+        // TODO Provide a way to configure the user script version
+        // For now, manually replace with config = {hideSuggestedTweets: true}
+        config = storedConfig
+        startManagingEngagement()
+      })
     }
   }
   else if (streamObserver) {
