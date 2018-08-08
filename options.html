@@ -3,6 +3,15 @@
   <head>
     <meta charset="utf-8">
     <style>
+      form {
+        font-size: 1.25em;
+        color: #444;
+      }
+      hr {
+        border-style: solid;
+        border-width: 1px 0 0 0;
+        border-color: #d7d7d7;
+      }
       label.checkbox input {
         margin-left:  0;
         vertical-align: middle;
@@ -10,17 +19,26 @@
       label.checkbox span {
         vertical-align: middle;
       }
+      section {
+        padding: .25em .5em;
+      }
     </style>
   </head>
   <body>
     <form>
-      <label class="checkbox">
-        <input type="checkbox" name="hideSuggestedTweets">
-        <span>Hide "Suggested tweets" section</span>
-      </label>
-      <p>
-        Twitter's algorithm pushes tweets people didn't explicitly intend to share into your timeline
-      </p>
+      <section>
+        <label class="checkbox">
+          <input type="checkbox" name="hideRetweets">
+          <span>Hide "Retweets" section</span>
+        </label>
+      </section>
+      <hr>
+      <section>
+        <label class="checkbox">
+          <input type="checkbox" name="hideSuggestedTweets">
+          <span>Hide "Suggested tweets" section</span>
+        </label>
+      </section>
     </form>
     <script src="options.js"></script>
   </body>

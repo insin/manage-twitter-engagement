@@ -34,9 +34,15 @@ Firefox extension page options:
 
 ## Options
 
+### Hide "Retweets" section
+
+Enable this option to completely hide retweets.
+
 ### Hide "Suggested tweets" section
 
 Enable this option to completely hide algorithmic tweets.
+
+> Hiding both sections will remove this extension's section headings from the Twitter homepage
 
 ## Attribution
 

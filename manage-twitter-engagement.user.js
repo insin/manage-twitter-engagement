@@ -3,7 +3,7 @@
 // @description Manage "engagement" on Twitter by moving retweets and algorithmic tweets to their own lists
 // @namespace   https://github.com/insin/manage-twitter-engagement/
 // @match       https://twitter.com/*
-// @version     6
+// @version     7
 // ==/UserScript==
 
 // Identify retweets by by their retweet id in element data
@@ -54,6 +54,11 @@ function toggleDisplayedTweets(tweets) {
 }
 
 function injectUI() {
+  // Don't do anything if we don't need a UI
+  if (config.hideRetweets && config.hideSuggestedTweets) {
+    return
+  }
+
   // It seems like Twitter caches some homepage content on navigation and restores it later?
   // Without this, navigating from Home → Notifications → Home results in a non-functional dupe.
   if (document.querySelector('#mte_tabs')) {
@@ -85,10 +90,12 @@ function injectUI() {
   </div>`
 
   for (let $tab of $tabs.querySelectorAll('li')) {
-    if ($tab.dataset.type === 'suggested' && config.hideSuggestedTweets) {
+    if ($tab.dataset.type === 'retweets' && config.hideRetweets ||
+        $tab.dataset.type === 'suggested' && config.hideSuggestedTweets) {
       $tab.style.display = 'none'
       continue
     }
+
     $tab.querySelector('a').addEventListener('click', (e) => {
       e.preventDefault()
       activateTab($tab)
@@ -146,7 +153,7 @@ new MutationObserver(() => {
       streamObserver = {disconnect(){}}
       chrome.storage.local.get((storedConfig) => {
         // TODO Provide a way to configure the user script version
-        // For now, manually replace with config = {hideSuggestedTweets: true}
+        // For now, manually replace with config = {hideRetweets: true, hideSuggestedTweets: true}
         config = storedConfig
         startManagingEngagement()
       })
