@@ -2,13 +2,13 @@
 
 ![](icons/icon128.png)
 
-**Manage "engagement" on Twitter by moving retweets and algorithmic tweets to their own lists**
+**Manage "engagement" on Twitter by moving retweets and algorithmic tweets to their own lists, or hiding them completely**
 
 Retweets and algorithmic timeline tweets on Twitter bring tension and emotion to a scene that already has too much of both.
 
 Manage Twitter Engagement moves them to their own lists on the homepage to reduce the default amount of "engagement" on Twitter, allowing you to opt-in to extra tweets when you have the headspace for them, instead of mixing them all together in your feed.
 
-It also provides an option to completely opt out of seeing algorithmic tweets.
+It also provides options to completely opt out of seeing retweets and algorithmic tweets.
 
 * [Install Chrome Extension](https://chrome.google.com/webstore/detail/manage-twitter-engagement/epgepgoafebogggijjemimfjbkidblia)
 * [Install Firefox Add-on](https://addons.mozilla.org/en-US/firefox/addon/manage-twitter-engagement/)
