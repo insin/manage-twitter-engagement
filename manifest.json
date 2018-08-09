@@ -3,7 +3,7 @@
   "name": "Manage Twitter Engagement",
   "description": "Manage \"engagement\" on Twitter by moving retweets and algorithmic tweets to their own lists, or hiding them completely",
   "homepage_url": "https://github.com/insin/manage-twitter-engagement/",
-  "version": "2.2",
+  "version": "2.3",
   "icons": {
     "16": "icons/icon16.png",
     "48": "icons/icon48.png",

@@ -3,7 +3,7 @@
 // @description Manage "engagement" on Twitter by moving retweets and algorithmic tweets to their own lists
 // @namespace   https://github.com/insin/manage-twitter-engagement/
 // @match       https://twitter.com/*
-// @version     7
+// @version     8
 // ==/UserScript==
 
 // Identify retweets by by their retweet id in element data
@@ -130,8 +130,11 @@ function startManagingEngagement() {
 }
 
 function stopManagingEngagement() {
-  $tabs.remove()
-  $tabs = null
+  // There won't be any UI to clean up if everything is hidden
+  if ($tabs) {
+    $tabs.remove()
+    $tabs = null
+  }
   streamObserver.disconnect()
   streamObserver = null
 }
